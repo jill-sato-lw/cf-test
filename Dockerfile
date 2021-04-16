@@ -1,4 +1,4 @@
-FROM lacework/lw_builder
+FROM lacework/lw_builder:0.1.0
 
 RUN apt-get install -y vim-tiny
 #ENV FLASK_APP=flaskr
