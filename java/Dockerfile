@@ -18,3 +18,4 @@ RUN apt-get install -y vim-tiny
 #EXPOSE 5000
 
 #CMD [ "flask", "run", "--host=0.0.0.0" ]
+
