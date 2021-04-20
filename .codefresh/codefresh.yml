@@ -1,0 +1,101 @@
+# More examples of Codefresh YAML can be found at
+# https://codefresh.io/docs/docs/yaml-examples/examples/
+# Inline yaml
+
+version: "1.0"
+# Stages can help you organize your steps in stages
+stages:
+  - "clone"
+  # - "init"
+  - "build"
+
+steps:
+  clone:
+    title: "Cloning repository"
+    type: "git-clone"
+    repo: "jill-sato-lw/cf-test"
+    # CF_BRANCH value is auto set when pipeline is triggered
+    # Learn more at codefresh.io/docs/docs/codefresh-yaml/variables/
+    revision: '${{CF_BRANCH}}'
+    git: "jill-sato-lw"
+    stage: "clone"
+    
+  # test disable_push
+  # my-docker-build:
+  #   title: "Building Docker image"
+  #   type: "build"
+  #   image_name: "lacework/test-build-release"
+  #   working_directory: "${{clone}}"
+  #   tag: "${{CF_BRANCH_TAG_NORMALIZED}}"
+  #   dockerfile: "java/Dockerfile"
+  #   stage: "my-docker-build"
+  #   disable_push: true
+
+  # resolve-push-action:
+  #     stage: "init"
+  #     image: alpine:latest
+  #     commands:
+  #      # TODO read CF_PULL_REQUEST is defined check if branch == master.
+  #       - export PUSH_DISABLED="true"
+  #       - cf_export PUSH_DISABLED
+
+  build-java-nopush: &build-java
+    stage: "build"
+    when:
+      condition:
+        all:
+          isBuildJava: '"${{BUILD_JAVA}}" == "true"'
+          isNotMasterBranch: '"${{CF_BRANCH}}" != "master"'
+    type: "build"
+    image_name: "lacework/test-build-release"
+    working_directory: "${{clone}}"
+    tag: "${{CF_BRANCH_TAG_NORMALIZED}}"
+    dockerfile: "java/Dockerfile"
+    disable_push: true
+
+  build-java-push:
+    <<: *build-java
+    # override 'when' and 'disable_push'
+    when:
+      condition:
+        all:
+          isBuildJava: '"${{BUILD_JAVA}}" == "true"'
+          isMasterBranch: '"${{CF_BRANCH}}" == "master"'
+    disable_push: false
+    
+  build-python-nopush: &build-python
+    stage: "build"
+    when:
+      condition:
+        all:
+          isBuildPython: '"${{BUILD_PYTHON}}" == "true"'
+          isNotMasterBranch: '"${{CF_BRANCH}}" != "master"'
+    type: "build"
+    image_name: "lacework/test-build-release"
+    working_directory: "${{clone}}"
+    tag: "${{CF_BRANCH_TAG_NORMALIZED}}"
+    dockerfile: "python/Dockerfile"
+    disable_push: true
+
+  build-python-push:
+    <<: *build-python
+    # override 'when' and 'disable_push'
+    when:
+      condition:
+        all:
+          isBuildPython: '"${{BUILD_PYTHON}}" == "true"'
+          isMasterBranch: '"${{CF_BRANCH}}" == "master"'
+    disable_push: false    
+
+  # test:
+  #   title: "Running test"
+  #   type: "freestyle" # Run any command
+  #   image: "lacework/test-build-release:${{CF_BRANCH_TAG_NORMALIZED}}" # The image in which command will be executed
+  #   working_directory: "${{clone}}" # Running command where code cloned
+  #   commands:
+  #     - "ls"
+  #     - echo BUILD_JAVA is $BUILD_JAVA
+  #     - echo TRIGGER is $TRIGGER
+  #   stage: "test"
+
+
